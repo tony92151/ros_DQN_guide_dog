@@ -1,3 +1,4 @@
+<?xml version="1.0" ?>
 <robot
   name="dog1">
   <link
@@ -59,7 +60,7 @@
     <visual>
       <origin
         xyz="0 0 0"
-        rpy="0 0 0" />
+        rpy="3.14159 0 0" />
       <geometry>
         <mesh
           filename="package://dog1/meshes/L_Link.STL" />
@@ -67,13 +68,13 @@
       <material
         name="">
         <color
-          rgba="0.79216 0.81961 0.93333 1" />
+          rgba="1 1 0.93333 1" />
       </material>
     </visual>
     <collision>
       <origin
         xyz="0 0 0"
-        rpy="0 0 0" />
+        rpy="3.14159 0 0" />
       <geometry>
         <mesh
           filename="package://dog1/meshes/L_Link.STL" />
@@ -95,6 +96,8 @@
     <dynamics
       friction="10" />
   </joint>
+
+  <!--###################################################-->
   <link
     name="R_Link">
     <inertial>
@@ -114,7 +117,7 @@
     <visual>
       <origin
         xyz="0 0 0"
-        rpy="0 0 0" />
+        rpy="3.14159 0 0" />
       <geometry>
         <mesh
           filename="package://dog1/meshes/R_Link.STL" />
@@ -128,7 +131,7 @@
     <collision>
       <origin
         xyz="0 0 0"
-        rpy="0 0 0" />
+        rpy="3.14159 0 0" />
       <geometry>
         <mesh
           filename="package://dog1/meshes/R_Link.STL" />
@@ -205,4 +208,23 @@
     <dynamics
       friction="0" />
   </joint>
+
+
+
+
+  <gazebo reference="base_link">
+      <material>Gazebo/Blue</material>
+  </gazebo>
+
+  <gazebo reference="L_Link">
+      <material>Gazebo/Orange</material>
+  </gazebo>
+
+  <gazebo reference="R_Link">
+      <material>Gazebo/Orange</material>
+  </gazebo>
+
+  <gazebo reference="free_Link">
+      <material>Gazebo/Black</material>
+  </gazebo>
 </robot>
