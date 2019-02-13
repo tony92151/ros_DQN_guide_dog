@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>turtlebot3_dqn</name>
+  <name>dqn</name>
   <version>1.0.0</version>
   <description>
     The turtlebot3_dqn package includes applications using reinforcement learning with DQN (Deep Q-Learning).
