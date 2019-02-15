@@ -28,7 +28,7 @@ source $HOME/.bashrc
 
 cd
 
-virtualenv --system-site-packages -p python3 ~/torch_gpu_ros
+virtualenv --system-site-packages -p python2.7 ~/torch_gpu_ros
 source ~/torch_gpu_ros/bin/activate
 
 
