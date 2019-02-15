@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/home/rospc/torch_gpu_ros/bin/python
 
 import rospy
 import rospkg
@@ -18,6 +18,8 @@ from environment_stage_1 import Env
 
 from collections import deque
 from std_msgs.msg import Float32MultiArray
+
+import torch
 
 
 EPISODES = 3000
@@ -129,7 +131,7 @@ class ReinforceAgent():
         self.model.fit(X_batch, Y_batch, batch_size=self.batch_size, epochs=1, verbose=0)
 
 if __name__ == '__main__':
-    rospy.init_node('machine')
+    rospy.init_node('machine_dqn')
 
     state_size = 26
     action_size = 5

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/home/rospc/torch_gpu_ros/bin/python
 #################################################################################
 # Copyright 2018 ROBOTIS CO., LTD.
 #
