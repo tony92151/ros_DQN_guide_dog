@@ -8,6 +8,7 @@ import numpy as np
 import random
 import time
 import sys
+import math
 #https://github.com/dokelung/Python-QA/blob/master/questions/standard_lib/Python%20%E7%8D%B2%E5%8F%96%E6%96%87%E4%BB%B6%E8%B7%AF%E5%BE%91%E5%8F%8A%E6%96%87%E4%BB%B6%E7%9B%AE%E9%8C%84(__file__%20%E7%9A%84%E4%BD%BF%E7%94%A8%E6%96%B9%E6%B3%95).md
 
 rospack = rospkg.RosPack()
@@ -19,17 +20,42 @@ from environment_stage_1 import Env
 from collections import deque
 from std_msgs.msg import Float32MultiArray
 
+from itertools import count
+
 import torch
+import torch.nn as nn
+import torch.optim as optim
+import torch.nn.functional as F
+import torchvision.transforms as T
+from torch.autograd import Variable
 
 
 EPISODES = 3000
 
+
+class DQN(nn.Module):
+    def __init__(self,state_size,action_size):
+        super(DQN, self).__init__()
+        self.fc = nn.Sequential(
+                nn.Linear(in_features = state_size, out_features = 24),
+                nn.BatchNorm1d(24),
+                nn.Linear(in_features = 24, out_features = 12),
+                nn.Dropout(0.5),
+                nn.Linear(in_features = 12, out_features = action_size)
+            )
+    def forward(self, s):
+        s = self.fc(s)
+        s = s.view(s.size(0),-1)
+        return s
+
+
+
 class ReinforceAgent():
     def __init__(self, state_size, action_size):
-        self.pub_result = rospy.Publisher('result', Float32MultiArray, queue_size=5)
-        self.dirPath = os.path.dirname(os.path.realpath(__file__))
-        self.dirPath = self.dirPath.replace('turtlebot3_dqn/nodes', 'turtlebot3_dqn/save_model/stage_1_')
-        self.result = Float32MultiArray()
+        #self.pub_result = rospy.Publisher('result', Float32MultiArray, queue_size=5)
+        #self.dirPath = os.path.dirname(os.path.realpath(__file__))
+        #self.dirPath = self.dirPath.replace('turtlebot3_dqn/nodes', 'turtlebot3_dqn/save_model/stage_1_')
+        #self.result = Float32MultiArray()
 
         self.load_model = False
         self.load_episode = 0
@@ -42,109 +68,150 @@ class ReinforceAgent():
         self.epsilon = 1.0
         self.epsilon_decay = 0.99
         self.epsilon_min = 0.05
-        self.batch_size = 64
+
+        self.device = torch.cuda.is_available()
+
+        self.batch_size = 32
         self.train_start = 64
-        self.memory = deque(maxlen=1000000)
+        self.memory = deque(maxlen=10000)
 
-        self.model = self.buildModel()
-        self.target_model = self.buildModel()
+        self.model = DQN(self.state_size,self.action_size)
+        self.target_model = DQN(self.state_size,self.action_size).eval()
 
-        self.updateTargetModel()
+        if self.device:
+            self.model.cuda()
+            self.target_model.cuda()
 
-        if self.load_model:
-            self.model.set_weights(load_model(self.dirPath+str(self.load_episode)+".h5").get_weights())
+        self.steps_done = 0
+        self.EPS_START = 0.9
+        self.EPS_END = 0.05
+        self.EPS_DECAY = 200
+        self.GAMMA = 0.999
 
-            with open(self.dirPath+str(self.load_episode)+'.json') as outfile:
-                param = json.load(outfile)
-                self.epsilon = param.get('epsilon')
+        self.optimizer = optim.Adam(self.model.parameters(), lr=0.001)   # optimize all cnn parameters
+    
 
-    def buildModel(self):
-        model = Sequential()
-        dropout = 0.2
 
-        model.add(Dense(64, input_shape=(self.state_size,), activation='relu', kernel_initializer='lecun_uniform'))
-
-        model.add(Dense(64, activation='relu', kernel_initializer='lecun_uniform'))
-        model.add(Dropout(dropout))
-
-        model.add(Dense(self.action_size, kernel_initializer='lecun_uniform'))
-        model.add(Activation('linear'))
-        model.compile(loss='mse', optimizer=RMSprop(lr=self.learning_rate, rho=0.9, epsilon=1e-06))
-        model.summary()
-
-        return model
-
-    def getQvalue(self, reward, next_target, done):
-        if done:
-            return reward
+    def selectAction(self, state):
+        p = self.EPS_END + (self.EPS_START - self.EPS_END) * math.exp(-1. * self.steps_done / self.EPS_DECAY)
+        if random.random() <= p:
+            return torch.tensor([[random.randrange(2)]], device=self.device, dtype=torch.long)
         else:
-            return reward + self.discount_factor * np.amax(next_target)
+            return self.model(state).max(1)[1].view(1, 1)
 
-    def updateTargetModel(self):
-        self.target_model.set_weights(self.model.get_weights())
+    def appendMemory(self, state, action, reward, next_state):
+        self.memory.append((state, action, reward, next_state))
 
-    def getAction(self, state):
-        if np.random.rand() <= self.epsilon:
-            self.q_value = np.zeros(self.action_size)
-            return random.randrange(self.action_size)
-        else:
-            q_value = self.model.predict(state.reshape(1, len(state)))
-            self.q_value = q_value
-            return np.argmax(q_value[0])
+    # def appendMemory(self, state, action, reward, next_state, done):
+    #     self.memory.append((state, action, reward, next_state, done))
 
-    def appendMemory(self, state, action, reward, next_state, done):
-        self.memory.append((state, action, reward, next_state, done))
+    def optimizer(self):
+        ############################################################
+        trans = np.array(self.memory)
 
-    def trainModel(self, target=False):
-        mini_batch = random.sample(self.memory, self.batch_size)
-        X_batch = np.empty((0, self.state_size), dtype=np.float64)
-        Y_batch = np.empty((0, self.action_size), dtype=np.float64)
+        trans_state = trans[:,0]
+        trans_action = trans[:,1]
+        trans_reward = trans[:,2]
+        trans_next_state = trans[:,3]
 
-        for i in range(self.batch_size):
-            states = mini_batch[i][0]
-            actions = mini_batch[i][1]
-            rewards = mini_batch[i][2]
-            next_states = mini_batch[i][3]
-            dones = mini_batch[i][4]
+        n = np.arange(10000).tolist()
+        pick = random.sample(n, k=self.batch_size)
 
-            q_value = self.model.predict(states.reshape(1, len(states)))
-            self.q_value = q_value
+        trans_state = trans_state[pick].tolist()
+        trans_action = trans_action[pick].tolist()
+        trans_reward = trans_reward[pick].tolist()
+        trans_next_state = trans_next_state[pick].tolist()
+        ############################################################
 
-            if target:
-                next_target = self.target_model.predict(next_states.reshape(1, len(next_states)))
+        trans_state = torch.FloatTensor(trans_state)
+        trans_action = torch.FloatTensor(trans_action)
+        trans_reward = torch.FloatTensor(trans_reward)
+        trans_next_state = torch.FloatTensor(trans_next_state)
 
-            else:
-                next_target = self.model.predict(next_states.reshape(1, len(next_states)))
+        state_action_values = self.model(trans_state).max(1)[0].detach().unsqueeze(1).type(torch.FloatTensor)
+        next_state_values = self.target_model(trans_next_state).max(1)[0].detach()
+        expected_state_action_values = (next_state_values * 0.999) + trans_reward
+        expected_state_action_values = expected_state_action_values.unsqueeze(1).type(torch.FloatTensor)
 
-            next_q_value = self.getQvalue(rewards, next_target, dones)
+        loss = nn.functional.smooth_l1_loss(state_action_values, expected_state_action_values)
 
-            X_batch = np.append(X_batch, np.array([states.copy()]), axis=0)
-            Y_sample = q_value.copy()
+        loss = Variable(loss, requires_grad = True)
 
-            Y_sample[0][actions] = next_q_value
-            Y_batch = np.append(Y_batch, np.array([Y_sample[0]]), axis=0)
+        self.optimizer.zero_grad()
+        loss.backward()
+        print("optimize")
 
-            if dones:
-                X_batch = np.append(X_batch, np.array([next_states.copy()]), axis=0)
-                Y_batch = np.append(Y_batch, np.array([[rewards] * self.action_size]), axis=0)
 
-        self.model.fit(X_batch, Y_batch, batch_size=self.batch_size, epochs=1, verbose=0)
 
 if __name__ == '__main__':
     rospy.init_node('machine_dqn')
+    ####
+    #rospy.init_node('turtlebot3_dqn_stage_1')
+    #pub_result = rospy.Publisher('result', Float32MultiArray, queue_size=5)
+    #pub_get_action = rospy.Publisher('get_action', Float32MultiArray, queue_size=5)
+    result = Float32MultiArray()
+    get_action = Float32MultiArray()
 
-    state_size = 26
-    action_size = 5
+    state_size = 48
+    action_size = 6
 
     env = Env(action_size)
 
-    state = env.reset()
-    env.move(0.5)
-    time.sleep(5)
-    state = env.reset()
-    env.move(2)
-    time.sleep(5)
-    
+    agent = ReinforceAgent(state_size, action_size)
+
+
+    start_time = time.time()
+
+    for e in range(EPISODES):
+        rospy.loginfo('EPISODES : %d',e)
+        done = False
+        state = env.reset()
+        score = 0
+        for t in count():
+            action = agent.selectAction(state)
+
+            next_state, reward, done = env.step(action)
+
+            if done:
+                next_state = None
+
+            agent.appendMemory(state, action, reward, next_state)
+            # agent.appendMemory(state, action, reward, next_state, done)
+
+            if len(agent.memory) >= agent.train_start:
+                if global_step <= agent.target_update:
+                    agent.optimizer()
+                else:
+                    agent.optimizer(True)
+
+
+            if t >= 500:
+                rospy.loginfo("Time out!!")
+                done = True
+
+            if done:
+                # result.data = [score, np.max(agent.q_value)]
+                # pub_result.publish(result)
+                # agent.updateTargetModel()
+                # scores.append(score)
+                # episodes.append(e)
+                m, s = divmod(int(time.time() - start_time), 60)
+                h, m = divmod(m, 60)
+
+                rospy.loginfo('Ep: %d score: %.2f memory: %d epsilon: %.2f time: %d:%02d:%02d',
+                              e, score, len(agent.memory), agent.epsilon, h, m, s)
+                # param_keys = ['epsilon']
+                # param_values = [agent.epsilon]
+                # param_dictionary = dict(zip(param_keys, param_values))
+                break
+
+            global_step += 1
+            if global_step % agent.target_update == 0:
+                rospy.loginfo("UPDATE TARGET NETWORK")
+
+        # if agent.epsilon > agent.epsilon_min:
+        #     agent.epsilon *= agent.epsilon_decay
+        
     
 
     
