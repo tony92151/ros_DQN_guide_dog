@@ -222,8 +222,28 @@
       friction="0" />
   </joint>
 
+  <link name="base_scan">
+    <collision>
+      <origin xyz="0.005 0.011 0.013" rpy="0 0 0"/> <!--xyz="0.005 0.011 0.013"-->
+      <geometry>
+        <box size="0.015 0.030 0.027"/>
+      </geometry>
+    </collision>
 
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <box size="0.015 0.030 0.027"/>
+      </geometry>
+    </visual>
+  </link>
 
-
+  <joint name="scan_joint" type="fixed">
+    <origin xyz="0.2 0 0.08" rpy="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="base_scan"/>
+  </joint>
 
 </robot>
