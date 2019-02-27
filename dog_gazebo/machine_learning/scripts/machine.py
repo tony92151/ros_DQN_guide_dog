@@ -15,7 +15,7 @@ rospack = rospkg.RosPack()
 env_path = rospack.get_path('machine_learning')
 
 sys.path.append(env_path+'/env')
-from environment_stage_1 import Env
+from environment_dog1 import Env
 
 from collections import deque
 from std_msgs.msg import Float32MultiArray
@@ -123,10 +123,10 @@ class ReinforceAgent():
         trans_next_state = trans_next_state[pick].tolist()
         ############################################################
 
-        trans_state = torch.FloatTensor(trans_state)
-        trans_action = torch.FloatTensor(trans_action)
-        trans_reward = torch.FloatTensor(trans_reward)
-        trans_next_state = torch.FloatTensor(trans_next_state)
+        trans_state = torch.FloatTensor(trans_state).cuda()
+        trans_action = torch.FloatTensor(trans_action).cuda()
+        trans_reward = torch.FloatTensor(trans_reward).cuda()
+        trans_next_state = torch.FloatTensor(trans_next_state).cuda()
 
         state_action_values = self.model(trans_state).max(1)[0].detach().unsqueeze(1).type(torch.FloatTensor)
         next_state_values = self.target_model(trans_next_state).max(1)[0].detach()
@@ -135,7 +135,7 @@ class ReinforceAgent():
 
         loss = nn.functional.smooth_l1_loss(state_action_values, expected_state_action_values)
 
-        loss = Variable(loss, requires_grad = True)
+        loss = Variable(loss, requires_grad = True).cuda()
 
         self.optimizer.zero_grad()
         loss.backward()
@@ -153,7 +153,7 @@ if __name__ == '__main__':
     get_action = Float32MultiArray()
 
     state_size = 48
-    action_size = 6
+    action_size = 7
 
     env = Env(action_size)
 

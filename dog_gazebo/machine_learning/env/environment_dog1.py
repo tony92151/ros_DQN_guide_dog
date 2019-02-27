@@ -39,7 +39,7 @@ class Env():
         self.initGoal = True
         self.get_goalbox = False
         self.position = Pose()
-        self.pub_cmd_vel = rospy.Publisher('cmd_vel', Twist, queue_size=5)
+        self.pub_cmd_vel = rospy.Publisher('/dog/cmd_vel', Twist, queue_size=5)
         self.sub_odom = rospy.Subscriber('odom', Odometry, self.getOdometry)
         self.reset_proxy = rospy.ServiceProxy('gazebo/reset_simulation', Empty)
         self.unpause_proxy = rospy.ServiceProxy('gazebo/unpause_physics', Empty)
@@ -75,9 +75,9 @@ class Env():
         done = False
 
         for i in range(len(scan.ranges)):
-            if scan.ranges[i] == float('Inf'):
+            if scan.ranges[i] == float('Inf'): # 正無窮       nan > not a number
                 scan_range.append(3.5)
-            elif np.isnan(scan.ranges[i]):
+            elif np.isnan(scan.ranges[i]): #np.isnan(float("nan"))>>True     np.isnan(float("inf"))>>False
                 scan_range.append(0)
             else:
                 scan_range.append(scan.ranges[i])
