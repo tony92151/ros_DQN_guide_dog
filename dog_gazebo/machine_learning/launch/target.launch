@@ -19,7 +19,7 @@
     command="$(find xacro)/xacro --inorder '$(find machine_learning)/env/target/target_link.xacro'" />
 
   <node name="target_spawner" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen"
-    args="-urdf -model target -param target_description"/>
+    args="-urdf -x 0 -y 0 -z 0 -model target -param target_description"/>
 
 
 

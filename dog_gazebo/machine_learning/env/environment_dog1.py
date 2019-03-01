@@ -28,7 +28,15 @@ from sensor_msgs.msg import LaserScan
 from nav_msgs.msg import Odometry
 from std_srvs.srv import Empty
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
-from respawnGoal import Respawn
+#from respawnGoal import Respawn
+
+import rospkg
+import sys
+rospack = rospkg.RosPack()
+env_path = rospack.get_path('machine_learning')
+
+sys.path.append(env_path+'/env')
+from target_move import MoveTarget
 
 class Env():
     def __init__(self, action_size):
@@ -44,7 +52,10 @@ class Env():
         self.reset_proxy = rospy.ServiceProxy('gazebo/reset_simulation', Empty)
         self.unpause_proxy = rospy.ServiceProxy('gazebo/unpause_physics', Empty)
         self.pause_proxy = rospy.ServiceProxy('gazebo/pause_physics', Empty)
-        self.respawn_goal = Respawn()
+        #self.respawn_goal = Respawn()
+
+        self.target = MoveTarget()
+        self.goalNum = 0
 
     def getGoalDistace(self):
         goal_distance = round(math.hypot(self.goal_x - self.position.x, self.goal_y - self.position.y), 2)
@@ -84,6 +95,7 @@ class Env():
 
         if min_range > min(scan_range) > 0:
             done = True
+            
 
         current_distance = round(math.hypot(self.goal_x - self.position.x, self.goal_y - self.position.y),2)
         if current_distance < 0.2:
@@ -112,8 +124,9 @@ class Env():
         if self.get_goalbox:
             rospy.loginfo("Goal!!")
             reward = 200
+            self.goalNum = self.goalNum + 1
             self.pub_cmd_vel.publish(Twist())
-            self.goal_x, self.goal_y = self.respawn_goal.getPosition(True, delete=True)
+            self.goal_x, self.goal_y = self.target.movingAt(self.goalNum)
             self.goal_distance = self.getGoalDistace()
             self.get_goalbox = False
 
@@ -155,7 +168,7 @@ class Env():
                 pass
 
         if self.initGoal:
-            self.goal_x, self.goal_y = self.respawn_goal.getPosition()
+            self.goal_x, self.goal_y = self.target.movingAt(self.goalNum)
             self.initGoal = False
 
         self.goal_distance = self.getGoalDistace()

@@ -16,6 +16,8 @@ env_path = rospack.get_path('machine_learning')
 
 sys.path.append(env_path+'/env')
 from environment_dog1 import Env
+from target_mave import MoveTarget
+
 
 from collections import deque
 from std_msgs.msg import Float32MultiArray
