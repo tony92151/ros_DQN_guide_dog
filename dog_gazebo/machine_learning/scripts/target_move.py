@@ -16,32 +16,27 @@ class MoveTarget():
 
     def moving(self,goal_x,goal_y):
         #pub_model = rospy.Publisher('gazebo/set_model_state', ModelState, queue_size=1)
-        while not rospy.is_shutdown():
-            obstacle = ModelState()
-            #model = rospy.wait_for_message('gazebo/model_states', ModelStates)
-            #print(model.name)
-            # print(model.pose)
-            # print(type(obstacle))
-            #time.sleep(1)
-            # for i in range(len(model.name)):
-            #     if model.name[i] == 'target':  # the model name is defined in .xacro file
-            #         #print(model.pose[2])
-            #         obstacle.model_name = 'target'
-            #         obstacle.pose = Pose()
-            #         obstacle.pose.position.x = goal_x
-            #         obstacle.pose.position.y = goal_y
-            #         obstacle.pose.position.z = 0
-            #         # obstacle.twist = Twist()
-            #         # obstacle.twist.angular.z = 0.5
-            #         pub_model.publish(obstacle)
-            obstacle.model_name = 'target'
-            obstacle.pose = Pose()
-            obstacle.pose.position.x = goal_x
-            obstacle.pose.position.y = goal_y
-            obstacle.pose.position.z = 0
-            # obstacle.twist = Twist()
-            # obstacle.twist.angular.z = 0.5
-            self.pub_model.publish(obstacle)
+        
+        obstacle = ModelState()
+        model = rospy.wait_for_message('gazebo/model_states', ModelStates)
+        #print(model.name)
+        #print(model.twist[2])
+        # print(type(obstacle))
+        #time.sleep(5)
+        for i in range(len(model.name)):
+            if model.name[i] == 'target':  # the model name is defined in .xacro file
+                obstacle.model_name = 'target'
+                
+                obstacle.pose = model.pose[i]
+                obstacle.pose.position.x = float(goal_x)
+                obstacle.pose.position.y = float(goal_y)
+                # obstacle.twist = Twist()
+                # obstacle.twist.angular.z = 0.5
+                self.pub_model.publish(obstacle)
+                #time.sleep(5)
+                
+
+            
 
 
 if __name__ == '__main__':
@@ -52,7 +47,7 @@ if __name__ == '__main__':
         #time.sleep(1)
     except:
         rospy.loginfo("Init error !!")
-    ti = 0.5
+    ti = 1
     move.moving(1,1)
     rospy.loginfo("Moving!!")
     time.sleep(ti)
