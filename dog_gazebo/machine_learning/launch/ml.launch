@@ -1,6 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <launch>
-  <!-- rf2o -->
-
   <node pkg="machine_learning" type="machine.py" name="ml" respawn="true"/>
 </launch>

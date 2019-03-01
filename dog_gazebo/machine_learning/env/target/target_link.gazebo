@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<robot>
+  <gazebo reference="target_link">
+    <material>Gazebo/RedTransparent</material>
+  </gazebo>
+
+</robot>

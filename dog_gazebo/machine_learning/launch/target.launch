@@ -14,10 +14,12 @@
     args="-file $(find dog1)/robots/dog1.xacro -urdf -model dog1"
     output="screen" /> -->
 
-  <param name="robot_description" command="$(find xacro)/xacro.py '$(find dog1)/robots/dog1.xacro'"/>
 
-  <node name="dog_spawn" pkg="gazebo_ros" type="spawn_model" output="screen"
-   args="-urdf -param robot_description -model dog" />
+  <param name="target_description"
+    command="$(find xacro)/xacro --inorder '$(find machine_learning)/env/target/target_link.xacro'" />
+
+  <node name="target_spawner" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen"
+    args="-urdf -model target -param target_description"/>
 
 
 

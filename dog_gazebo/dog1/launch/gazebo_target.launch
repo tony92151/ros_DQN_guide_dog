@@ -1,0 +1,11 @@
+<launch>
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(find dog1)/world/trainner.world"/>
+  </include> 
+  <param name="target_description" command="$(find xacro)/xacro.py '$(find machine_learning)/env/target/target_link.xacro'"/>
+
+  <node name="target_spawn" pkg="gazebo_ros" type="spawn_model" output="screen"
+   args="-urdf -x 0 -y 0 -z 1 -param target_description -model target" />
+
+
+</launch>

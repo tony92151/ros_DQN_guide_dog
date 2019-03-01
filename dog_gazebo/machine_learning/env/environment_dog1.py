@@ -75,7 +75,7 @@ class Env():
         done = False
 
         for i in range(len(scan.ranges)):
-            if scan.ranges[i] == float('Inf'): # 正無窮       nan > not a number
+            if scan.ranges[i] == float('Inf'): # pastive infinity       nan > not a number
                 scan_range.append(3.5)
             elif np.isnan(scan.ranges[i]): #np.isnan(float("nan"))>>True     np.isnan(float("inf"))>>False
                 scan_range.append(0)
