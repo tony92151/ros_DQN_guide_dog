@@ -29,7 +29,7 @@ from nav_msgs.msg import Odometry
 from std_srvs.srv import Empty
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
 #from respawnGoal import Respawn
-
+import time
 import rospkg
 import sys
 rospack = rospkg.RosPack()
@@ -49,13 +49,14 @@ class Env():
         self.position = Pose()
         self.pub_cmd_vel = rospy.Publisher('/dog/cmd_vel', Twist, queue_size=5)
         self.sub_odom = rospy.Subscriber('odom', Odometry, self.getOdometry)
-        self.reset_proxy = rospy.ServiceProxy('gazebo/reset_simulation', Empty)
-        self.unpause_proxy = rospy.ServiceProxy('gazebo/unpause_physics', Empty)
-        self.pause_proxy = rospy.ServiceProxy('gazebo/pause_physics', Empty)
+        self.reset_proxy = rospy.ServiceProxy('gazebo/reset_world', Empty) # reset_simulation
+        #self.unpause_proxy = rospy.ServiceProxy('gazebo/unpause_physics', Empty)
+        #self.pause_proxy = rospy.ServiceProxy('gazebo/pause_physics', Empty)
         #self.respawn_goal = Respawn()
 
         self.target = MoveTarget()
         self.goalNum = 0
+
 
     def getGoalDistace(self):
         goal_distance = round(math.hypot(self.goal_x - self.position.x, self.goal_y - self.position.y), 2)
@@ -81,8 +82,8 @@ class Env():
 
     def getState(self, scan):
         scan_range = []
-        heading = self.heading
-        min_range = 0.13
+        heading = float(self.heading)
+        min_range = 0.15
         done = False
 
         for i in range(len(scan.ranges)):
@@ -98,8 +99,10 @@ class Env():
             
 
         current_distance = round(math.hypot(self.goal_x - self.position.x, self.goal_y - self.position.y),2)
+        current_distance = float(current_distance)
         if current_distance < 0.2:
             self.get_goalbox = True
+            done = True
 
         return scan_range + [heading, current_distance], done
 
@@ -108,7 +111,7 @@ class Env():
         current_distance = state[-1]
         heading = state[-2]
 
-        for i in range(5):
+        for i in range(7):
             angle = -pi / 4 + heading + (pi / 8 * i) + pi / 2
             tr = 1 - 4 * math.fabs(0.5 - math.modf(0.25 + 0.5 * angle % (2 * math.pi) / math.pi)[0])
             yaw_reward.append(tr)
@@ -133,18 +136,18 @@ class Env():
         return reward
 
     def step(self, action):
-        max_angular_vel = 1.5
+        max_angular_vel = 2.5
         ang_vel = ((self.action_size - 1)/2 - action) * max_angular_vel * 0.5
 
         vel_cmd = Twist()
-        vel_cmd.linear.x = 0.15
+        vel_cmd.linear.x = 0.4
         vel_cmd.angular.z = ang_vel
         self.pub_cmd_vel.publish(vel_cmd)
 
         data = None
         while data is None:
             try:
-                data = rospy.wait_for_message('scan', LaserScan, timeout=5)
+                data = rospy.wait_for_message('/scan', LaserScan, timeout=5)
             except:
                 pass
 
@@ -154,22 +157,24 @@ class Env():
         return np.asarray(state), reward, done
 
     def reset(self):
-        rospy.wait_for_service('gazebo/reset_simulation')
+        rospy.wait_for_service('gazebo/reset_world')
         try:
-            self.reset_proxy()
+            self.reset_proxy() #problem
         except (rospy.ServiceException) as e:
             print("gazebo/reset_simulation service call failed")
 
         data = None
+        
         while data is None:
             try:
-                data = rospy.wait_for_message('scan', LaserScan, timeout=5)
+                data = rospy.wait_for_message('/scan', LaserScan, timeout=5)
             except:
                 pass
 
-        if self.initGoal:
-            self.goal_x, self.goal_y = self.target.movingAt(self.goalNum)
-            self.initGoal = False
+        # if self.initGoal:
+        #     self.goal_x, self.goal_y = self.target.movingAt(self.goalNum)
+        #     self.initGoal = False
+        self.goal_x, self.goal_y = self.target.movingAt(self.goalNum)
 
         self.goal_distance = self.getGoalDistace()
         state, done = self.getState(data)

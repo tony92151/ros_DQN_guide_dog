@@ -61,7 +61,21 @@ class MoveTarget():
                 # obstacle.twist = Twist()
                 # obstacle.twist.angular.z = 0.5
                 self.pub_model.publish(obstacle)
+                rospy.loginfo("Goal at local %d" ,p)
                 #time.sleep(5)
+
+
+        # obstacle.model_name = 'target'
+        
+        # #obstacle.pose = model.pose[i]
+        # p = p%4
+        # #print(self.goalTable[p][0])
+        # obstacle.pose.position.x = float(self.goalTable[p][0])
+        # obstacle.pose.position.y = float(self.goalTable[p][1])
+        # # obstacle.twist = Twist()
+        # # obstacle.twist.angular.z = 0.5
+        # self.pub_model.publish(obstacle)
+        # #time.sleep(5)
         return float(self.goalTable[p][0]),float(self.goalTable[p][1])
                 
 

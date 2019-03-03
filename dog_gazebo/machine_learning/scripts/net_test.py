@@ -58,13 +58,20 @@ def optimize(update=False):
     trans_reward = trans[:,2]
     trans_next_state = trans[:,3]
 
-    n = np.arange(100).tolist()
+    print("trans_state:",trans_state)
+    print("trans_action:",trans_action)
+    print("trans_reward:",trans_reward)
+    print("trans_next_state:",trans_next_state)
+
+    n = np.arange(10).tolist()
+    print(n)
     pick = random.sample(n, k=2)
 
     trans_state = trans_state[pick].tolist()
     trans_action = trans_action[pick].tolist()
     trans_reward = trans_reward[pick].tolist()
     trans_next_state = trans_next_state[pick].tolist()
+    
 
     trans_state = torch.FloatTensor(trans_state)
     trans_action = torch.FloatTensor(trans_action)
@@ -80,7 +87,8 @@ def optimize(update=False):
     # print("trans_action s:",trans_action.shape)
     # print("trans_reward s:",trans_reward.shape)
     # print("trans_next_state s",trans_next_state.shape)
-
+    #print(trans_state.shape)
+    #print(model(trans_state))
     state_action_values = model(trans_state).max(1)[0].detach().unsqueeze(1).type(torch.FloatTensor)
     next_state_values = t_model(trans_next_state).max(1)[0].detach()
     expected_state_action_values = (next_state_values * 0.999) + trans_reward
@@ -115,7 +123,7 @@ if __name__ == '__main__':
     #print(memory)
     #print("done")
     #print(memory[:,0])
-    for i in range(100):
+    for i in range(10):
         if i % 10 == 0:
             optimize(True)
         else:
