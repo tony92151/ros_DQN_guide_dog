@@ -1,0 +1,30 @@
+<launch>
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    
+  </include> 
+  <node
+    name="tf_footprint_base"
+    pkg="tf"
+    type="static_transform_publisher"
+    args="0 0 0 0 0 0 base_link base_footprint 40" />
+  <!-- <node
+    name="spawn_model"
+    pkg="gazebo_ros"
+    type="spawn_model"
+    args="-file $(find dog1)/robots/dog1.xacro -urdf -model dog1"
+    output="screen" /> -->
+
+  <param name="robot_description" command="$(find xacro)/xacro.py '$(find dog1)/robots/dog1.xacro'"/>
+
+  <node name="dog_spawn" pkg="gazebo_ros" type="spawn_model" output="screen"
+   args="-urdf -param robot_description -model dog" />
+
+
+
+
+  <node
+    name="fake_joint_calibration"
+    pkg="rostopic"
+    type="rostopic"
+    args="pub /calibrated std_msgs/Bool true" />
+</launch>

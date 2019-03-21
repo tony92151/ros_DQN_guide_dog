@@ -1,0 +1,32 @@
+<launch>
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(find dog2)/world/cafe.world"/>
+  </include> 
+  <node
+    name="tf_footprint_base"
+    pkg="tf"
+    type="static_transform_publisher"
+    args="0 0 0 0 0 0 base_link base_footprint 40" />
+
+  <node
+    name="tf_scan_base"
+    pkg="tf"
+    type="static_transform_publisher"
+    args="0.2 0 0.08 0 0 0 base_link base_scan 40" />
+
+  <!--Load dog-->
+  <param name="robot_description" command="$(find xacro)/xacro.py '$(find dog2)/robots/dog2.xacro'"/>
+
+  <node name="dog_spawn" pkg="gazebo_ros" type="spawn_model" output="screen"
+   args="-urdf -x 0 -y 0 -z 0 -param robot_description -model dog" />
+
+  
+  
+
+
+  <node
+    name="fake_joint_calibration"
+    pkg="rostopic"
+    type="rostopic"
+    args="pub /calibrated std_msgs/Bool true" />
+</launch>

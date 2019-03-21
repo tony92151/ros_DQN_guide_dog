@@ -1,0 +1,230 @@
+<?xml version="1.0" ?>
+<robot
+  name="dog1">
+  <link
+    name="base_link">
+    <inertial>
+      <origin
+        xyz="0.086236 -0.00053701 0.022928"
+        rpy="0 0 0" />
+      <mass
+        value="1.1657" />
+      <inertia
+        ixx="0.010059"
+        ixy="-3.9949E-06"
+        ixz="7.2281E-06"
+        iyy="0.0071159"
+        iyz="-3.3476E-06"
+        izz="0.014078" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://dog1/meshes/base_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://dog1/meshes/base_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <link
+    name="L_Link">
+    <inertial>
+      <origin
+        xyz="2.0791E-06 8.5902E-07 -0.018047"
+        rpy="0 0 0" />
+      <mass
+        value="0.1021" />
+      <inertia
+        ixx="6.9455E-05"
+        ixy="5.4233E-10"
+        ixz="-3.3428E-09"
+        iyy="6.9454E-05"
+        iyz="-1.3811E-09"
+        izz="0.00010157" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="3.14159 0 0" />
+      <geometry>
+        <mesh
+          filename="package://dog1/meshes/L_Link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="3.14159 0 0" />
+      <geometry>
+        <mesh
+          filename="package://dog1/meshes/L_Link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="L_joint"
+    type="continuous">
+    <origin
+      xyz="0 0.1566 0"
+      rpy="1.5708 1.5708 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="L_Link" />
+    <axis
+      xyz="0 0 1" />
+    <dynamics
+      friction="10" />
+  </joint>
+
+  <!--###################################################-->
+  <link
+    name="R_Link">
+    <inertial>
+      <origin
+        xyz="2.0791E-06 8.5899E-07 0.018047"
+        rpy="0 0 0" />
+      <mass
+        value="0.1021" />
+      <inertia
+        ixx="6.9455E-05"
+        ixy="5.4232E-10"
+        ixz="3.3428E-09"
+        iyy="6.9454E-05"
+        iyz="1.3811E-09"
+        izz="0.00010157" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="3.14159 0 0" />
+      <geometry>
+        <mesh
+          filename="package://dog1/meshes/R_Link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="3.14159 0 0" />
+      <geometry>
+        <mesh
+          filename="package://dog1/meshes/R_Link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="R_joint"
+    type="continuous">
+    <origin
+      xyz="0 -0.1566 0"
+      rpy="1.5708 1.5708 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="R_Link" />
+    <axis
+      xyz="0 0 1" />
+    <dynamics
+      friction="10" />
+  </joint>
+  <link
+    name="free_Link">
+    <inertial>
+      <origin
+        xyz="5.8889E-12 3.2808E-11 -0.00055748"
+        rpy="0 0 0" />
+      <mass
+        value="0.090747" />
+      <inertia
+        ixx="3.5132E-05"
+        ixy="-7.7199E-16"
+        ixz="1.9863E-14"
+        iyy="3.5201E-05"
+        iyz="-5.3011E-14"
+        izz="5.1852E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://dog1/meshes/free_Link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.75294 0.75294 0.75294 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://dog1/meshes/free_Link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="free_joint"
+    type="fixed">
+    <origin
+      xyz="0.17 0 -0.015"
+      rpy="1.5708 0.063602 -1.0513E-16" />
+    <parent
+      link="base_link" />
+    <child
+      link="free_Link" />
+    <axis
+      xyz="0 0 0" />
+    <dynamics
+      friction="0" />
+  </joint>
+
+
+
+
+  <gazebo reference="base_link">
+      <material>Gazebo/Blue</material>
+  </gazebo>
+
+  <gazebo reference="L_Link">
+      <material>Gazebo/Orange</material>
+  </gazebo>
+
+  <gazebo reference="R_Link">
+      <material>Gazebo/Orange</material>
+  </gazebo>
+
+  <gazebo reference="free_Link">
+      <material>Gazebo/Black</material>
+  </gazebo>
+</robot>
