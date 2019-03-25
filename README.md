@@ -1,8 +1,22 @@
 # ros_guide_dog
 
-<img src="https://github.com/tony92151/ros_guide_dog/blob/master/image/image10.JPG"/>
+
 <img src="https://github.com/tony92151/ros_guide_dog/blob/master/image/image10.gif"/>
 <img src="https://github.com/tony92151/ros_guide_dog/blob/master/image/dqn.gif"/>
+
+
+
+## Machine learning (pytorch)
+
+<img src="https://github.com/tony92151/ros_guide_dog/blob/master/image/image11.JPG"/>
+
+> roslaunch dog2 dog2_gazebo_home.launch
+
+> rosrun dog2 keyboard_teleop.py
+
+
+
+
 
 ## Machine learning (pytorch)
 
