@@ -8,7 +8,7 @@
 
 ## Machine learning (pytorch)
 
-<img src="https://github.com/tony92151/ros_guide_dog/blob/master/image/image11.JPG"/>
+<img src="https://github.com/tony92151/ros_guide_dog/blob/master/image/image11.png"/>
 
 > roslaunch dog2 dog2_gazebo_home.launch
 
