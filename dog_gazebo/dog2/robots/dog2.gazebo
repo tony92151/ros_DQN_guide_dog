@@ -45,7 +45,7 @@
     <material>Gazebo/FlatBlack</material>
     <sensor type="ray" name="lds_lfcd_sensor">
       <pose>0 0 0 0 0 0</pose>
-      <visualize>True</visualize>
+      <visualize>false</visualize>
       <update_rate>10</update_rate>
       <ray>
         <scan>
@@ -70,6 +70,23 @@
       <plugin name="gazebo_ros_lds_lfcd_controller" filename="libgazebo_ros_laser.so">
         <topicName>scan</topicName>
         <frameName>base_scan</frameName>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+
+
+  <gazebo reference="asus_link">
+    <sensor type="depth" name="Xtion">
+      <update_rate>20</update_rate>
+      
+      <plugin name="Xtion_camera_controller" filename="libgazebo_ros_openni_kinect.so">
+        <imageTopicName>Xtion/rgb/image_raw</imageTopicName>
+        <cameraInfoTopicName>Xtion/rgb/camera_info</cameraInfoTopicName>
+        <depthImageTopicName>Xtion/depth/image_raw</depthImageTopicName>
+        <depthImageCameraInfoTopicName>Xtion/depth/camera_info</depthImageCameraInfoTopicName>
+        <pointCloudTopicName>Xtion/depth/points</pointCloudTopicName>
+        <frameName>Xtion_depth_optical_frame</frameName>
       </plugin>
     </sensor>
   </gazebo>

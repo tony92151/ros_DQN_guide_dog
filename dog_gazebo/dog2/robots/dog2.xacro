@@ -4,12 +4,11 @@
   <xacro:property name="cameraSize" value="0.05"/>
   <xacro:property name="cameraMass" value="0.1"/>
 
-  <xacro:include filename="$(find dog2)/robots/dog1.gazebo" />
+  <xacro:include filename="$(find dog2)/robots/dog2.gazebo" />
   <xacro:include filename="$(find dog2)/robots/materials.xacro" />
-  <xacro:include filename="$(find dog2)/robots/asus_camera.urdf.xacro" />
 
-  <link
-    name="base_link">
+
+  <link name="base_link">
     <inertial>
       <origin
         xyz="0.086236 -0.00053701 0.022928"
@@ -30,7 +29,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://dog1/meshes/base_link.STL" />
+          filename="package://dog2/meshes/base_link.STL" />
       </geometry>
       <material
         name="">
@@ -44,12 +43,11 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://dog1/meshes/base_link.STL" />
+          filename="package://dog2/meshes/base_link.STL" />
       </geometry>
     </collision>
   </link>
-  <link
-    name="L_Link">
+  <link name="L_Link">
     <inertial>
       <origin
         xyz="2.0791E-06 8.5902E-07 -0.018047"
@@ -70,7 +68,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://dog1/meshes/L_Link.STL" />
+          filename="package://dog2/meshes/L_Link.STL" />
       </geometry>
       <material
         name="">
@@ -84,7 +82,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://dog1/meshes/L_Link.STL" />
+          filename="package://dog2/meshes/L_Link.STL" />
       </geometry>
     </collision>
   </link>
@@ -106,8 +104,7 @@
   </joint>
 
   <!--###################################################-->
-  <link
-    name="R_Link">
+  <link name="R_Link">
     <inertial>
       <origin
         xyz="2.0791E-06 8.5899E-07 0.018047"
@@ -128,7 +125,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://dog1/meshes/R_Link.STL" />
+          filename="package://dog2/meshes/R_Link.STL" />
       </geometry>
       <material
         name="">
@@ -142,7 +139,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://dog1/meshes/R_Link.STL" />
+          filename="package://dog2/meshes/R_Link.STL" />
       </geometry>
     </collision>
   </link>
@@ -166,8 +163,7 @@
 
 
 
-  <link
-    name="free_Link">
+  <link name="free_Link">
     <inertial>
       <origin
         xyz="5.8889E-12 3.2808E-11 -0.00055748"
@@ -188,7 +184,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://dog1/meshes/free_Link.STL" />
+          filename="package://dog2/meshes/free_Link.STL" />
       </geometry>
       <material
         name="">
@@ -202,7 +198,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://dog1/meshes/free_Link.STL" />
+          filename="package://dog2/meshes/free_Link.STL" />
       </geometry>
       
     </collision>
@@ -245,6 +241,30 @@
     <origin xyz="0.2 0 0.08" rpy="0 0 0"/>
     <parent link="base_link"/>
     <child link="base_scan"/>
+  </joint>
+
+
+  <link name="asus_link">
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://dog2/meshes/asus_camera/asus_camera_simple.dae"/>
+      </geometry>
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://dog2/meshes/asus_camera/asus_camera_simple.dae"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="asus_depth_joint" type="fixed">
+    <origin xyz="0.2 0 0.05" rpy="0 0 0" />
+    <parent link="base_link" />
+    <child link="asus_link"/>
   </joint>
 
 </robot>

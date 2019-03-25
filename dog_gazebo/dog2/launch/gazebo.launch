@@ -7,6 +7,12 @@
     pkg="tf"
     type="static_transform_publisher"
     args="0 0 0 0 0 0 base_link base_footprint 40" />
+
+  <node
+    name="tf_asus"
+    pkg="tf"
+    type="static_transform_publisher"
+    args="0.2 0 0.08 -1.57075 0 -1.57075  base_link Xtion_depth_optical_frame 40" />
   <!-- <node
     name="spawn_model"
     pkg="gazebo_ros"
@@ -14,12 +20,12 @@
     args="-file $(find dog1)/robots/dog1.xacro -urdf -model dog1"
     output="screen" /> -->
 
-  <param name="robot_description" command="$(find xacro)/xacro.py '$(find dog1)/robots/dog1.xacro'"/>
+  <param name="robot_description" command="$(find xacro)/xacro.py '$(find dog2)/robots/dog2.xacro'"/>
 
   <node name="dog_spawn" pkg="gazebo_ros" type="spawn_model" output="screen"
-   args="-urdf -param robot_description -model dog" />
+   args="-urdf -x 0 -y 0 -z 0.1 -param robot_description -model dog2" />
 
-
+  <node pkg="rviz" type="rviz" name="rviz" args="-d $(find dog2)/rviz/people.rviz"/>
 
 
   <node

@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+   
+      <!-- ASUS Xtion PRO camera for simulation -->
+      <gazebo reference="asus_link">
+        <sensor type="depth" name="Xtion">
+          <update_rate>20</update_rate>
+          <camera>
+            <horizontal_fov>62.8 * 3.14159/180.0</horizontal_fov>
+            <image>
+              <format>R8G8B8</format>
+              <width>640</width>
+              <height>480</height>
+            </image>
+            <clip>
+              <near>0.5</near>
+              <far>9</far>
+            </clip>
+          </camera>
+          <plugin name="Xtion_camera_controller" filename="libgazebo_ros_openni_kinect.so">
+            <imageTopicName>Xtion/rgb/image_raw</imageTopicName>
+            <cameraInfoTopicName>Xtion/rgb/camera_info</cameraInfoTopicName>
+            <depthImageTopicName>Xtion/depth/image_raw</depthImageTopicName>
+            <depthImageCameraInfoTopicName>Xtion/depth/camera_info</depthImageCameraInfoTopicName>
+            <pointCloudTopicName>Xtion/depth/points</pointCloudTopicName>
+            <frameName>Xtion_depth_optical_frame</frameName>
+          </plugin>
+        </sensor>
+      </gazebo>
+
+  </robot>
+  
