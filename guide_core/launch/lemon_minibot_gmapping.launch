@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+	<arg name="use_joy" default="false" />
+
+	<include file="$(find lemon_minibot_detect)/launch/ar_tag_sim.launch"/>
+
+	<node pkg="lemon_minibot_core" name="ar_local" type="ar_local.py" output="screen"/>
+
+	<include file="$(find minibot_simulation)/launch/simulation/simulation_gmapping.launch"/>
+
+</launch>
