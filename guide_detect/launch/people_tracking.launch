@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+
+    <arg name="camera_namespace" default="" />
+    <arg name="depth_image" default="depth/image_raw" />
+    <arg name="rgb_image" default="/rgb/image_raw" />
+    <arg name="camera_info_rgb" default="/rgb/camera_info" />
+    <arg name="camera_info_depth" default="/depth/camera_info" />
+    <arg name="target_frame" default="/base_link" />
+
+
+    <arg name="machine" default="localhost" />
+    
+    <include file="$(find visual_odometry)/launch/visual_odometry.launch">
+        <arg name="camera_namespace" value="$(arg camera_namespace)"/>
+        <arg name="depth_image" value="$(arg depth_image)" />
+        <arg name="mono_image" value="$(arg rgb_image)" />
+        <arg name="camera_info_depth" value="$(arg camera_info_depth)" />
+        <arg name="machine" value="$(arg machine)" />
+    </include>
+
+    <!-- <include file="$(find ground_plane_estimation)/launch/ground_plane_estimated.launch">
+        <arg name="camera_namespace" value="$(arg camera_namespace)"/>
+        <arg name="depth_image" value="$(arg depth_image)"/>
+        <arg name="camera_info_rgb" value="$(arg camera_info_rgb)"/>
+        <arg name="machine" value="$(arg machine)" />
+    </include> -->
+
+    <include file="$(find mdl_people_tracker)/launch/mdl_people_tracker.launch">
+        <arg name="camera_namespace" value="$(arg camera_namespace)" />
+        <arg name="rgb_image" value="$(arg rgb_image)" />
+        <arg name="camera_info_rgb" value="$(arg camera_info_rgb)" />
+        <arg name="target_frame" value="$(arg target_frame)" />
+        <arg name="machine" value="$(arg machine)" />
+    </include>
+
+    <include file="$(find upper_body_detector)/launch/upper_body_detector.launch">
+        <arg name="camera_namespace" value="$(arg camera_namespace)" />
+        <arg name="depth_image" value="$(arg depth_image)" />
+        <arg name="rgb_image" value="$(arg rgb_image)" />
+        <arg name="camera_info_depth" value="$(arg camera_info_depth)" />
+        <arg name="machine" value="$(arg machine)" />
+    </include>
+
+     
+
+	
+</launch>

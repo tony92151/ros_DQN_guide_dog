@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+
+    <arg name="camera_namespace" default="" />
+    <arg name="depth_image" default="depth/image_raw" />
+    <arg name="rgb_image" default="/rgb/image_raw" />
+    <arg name="camera_info_rgb" default="/rgb/camera_info" />
+    <arg name="camera_info_depth" default="/depth/camera_info" />
+    <arg name="target_frame" default="/base_link" />
+    
+
+
+    <include file="$(find ground_plane_estimation)/launch/ground_plane_estimated.launch">
+        <arg name="camera_namespace" value="$(arg camera_namespace)"/>
+        <arg name="depth_image" value="$(arg depth_image)"/>
+        <arg name="camera_info_rgb" value="$(arg camera_info_rgb)"/>
+    </include>
+     
+
+	
+</launch>
