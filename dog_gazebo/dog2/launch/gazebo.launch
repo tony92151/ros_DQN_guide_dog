@@ -22,8 +22,18 @@
 
   <param name="robot_description" command="$(find xacro)/xacro.py '$(find dog2)/robots/dog2.xacro'"/>
 
-  <node name="dog_spawn" pkg="gazebo_ros" type="spawn_model" output="screen"
-   args="-urdf -x 0 -y 0 -z 0.1 -param robot_description -model dog2" />
+  <node
+    name="dog_spawn"
+    pkg="gazebo_ros" 
+    type="spawn_model"
+    output="screen"
+    args="-urdf -x 0 -y 0 -z 0.1 -param robot_description -model dog2" >
+
+
+    <remap from="/rgb/image_raw" to="/data_throttled_image"/>
+    <remap from="depth/points" to="/camera/depth_registered/image_raw"/>
+    <remap from="rgb/camera_info" to="/camera/rgb/camera_info"/> 
+  </node>
 
   <node pkg="rviz" type="rviz" name="rviz" args="-d $(find dog2)/rviz/people.rviz"/>
 
@@ -33,4 +43,6 @@
     pkg="rostopic"
     type="rostopic"
     args="pub /calibrated std_msgs/Bool true" />
+
+  
 </launch>

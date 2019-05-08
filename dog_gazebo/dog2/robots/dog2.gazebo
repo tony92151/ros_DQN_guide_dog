@@ -50,7 +50,7 @@
       <ray>
         <scan>
           <horizontal>
-            <samples>48</samples>
+            <samples>360</samples>
             <resolution>1</resolution>
             <min_angle>0.0</min_angle>
             <max_angle>6.28319</max_angle>
@@ -81,11 +81,11 @@
       <update_rate>20</update_rate>
       
       <plugin name="Xtion_camera_controller" filename="libgazebo_ros_openni_kinect.so">
-        <imageTopicName>Xtion/rgb/image_raw</imageTopicName>
-        <cameraInfoTopicName>Xtion/rgb/camera_info</cameraInfoTopicName>
-        <depthImageTopicName>Xtion/depth/image_raw</depthImageTopicName>
-        <depthImageCameraInfoTopicName>Xtion/depth/camera_info</depthImageCameraInfoTopicName>
-        <pointCloudTopicName>Xtion/depth/points</pointCloudTopicName>
+        <imageTopicName>rgb/image_raw</imageTopicName>
+        <cameraInfoTopicName>rgb/camera_info</cameraInfoTopicName>
+        <depthImageTopicName>depth/image_raw</depthImageTopicName>
+        <depthImageCameraInfoTopicName>depth/camera_info</depthImageCameraInfoTopicName>
+        <pointCloudTopicName>depth/points</pointCloudTopicName>
         <frameName>Xtion_depth_optical_frame</frameName>
       </plugin>
     </sensor>

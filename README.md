@@ -14,9 +14,15 @@
 
 > rosrun dog2 keyboard_teleop.py
 
+## rgbd camera in 2019 eurobot field with rtabmap
 
+### vslam
 
+> roslaunch dog2 dog2_gazebo_eurobot.launch args:="--delete_db_on_start"
 
+### localize
+
+> roslaunch dog2 dog2_gazebo_eurobot.launch localization:=true
 
 ## Machine learning (pytorch)
 <img src="https://github.com/tony92151/ros_guide_dog/blob/master/image/dqn.gif"/>
