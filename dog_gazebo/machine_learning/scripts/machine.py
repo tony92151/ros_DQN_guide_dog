@@ -1,4 +1,4 @@
-#!/home/rospc/torch_gpu_ros/bin/python
+#!/home/ros/torch_gpu_ros/bin/python
 
 import rospy
 import rospkg
@@ -32,7 +32,7 @@ import torchvision.transforms as T
 from torch.autograd import Variable
 
 
-EPISODES = 3000
+EPISODES = 10000
 
 
 class DQN(nn.Module):
@@ -227,7 +227,7 @@ if __name__ == '__main__':
                     agent.optimize(True)
 
 
-            if t >= 120: # second for time out interrupt
+            if t >= 50: # second for time out interrupt
                 rospy.loginfo("Time out!!")
                 done = True
 

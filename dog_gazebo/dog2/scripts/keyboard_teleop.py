@@ -65,11 +65,11 @@ if __name__=="__main__":
 		    target_linear_vel = -max_
                 status = status + 1
                 print vels(target_linear_vel,target_angular_vel)
-            elif key == 'd' :
+            elif key == 'a' :
                 target_angular_vel = target_angular_vel + gage
                 status = status + 1
                 print vels(target_linear_vel,target_angular_vel)
-            elif key == 'a' :
+            elif key == 'd' :
                 target_angular_vel = target_angular_vel - gage
                 status = status + 1
                 print vels(target_linear_vel,target_angular_vel)

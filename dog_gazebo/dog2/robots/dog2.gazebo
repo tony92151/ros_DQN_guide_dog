@@ -15,7 +15,7 @@
       <commandTopic>dog/cmd_vel</commandTopic>
       <odometryTopic>odom</odometryTopic>
       <odometryFrame>odom</odometryFrame>
-      <robotBaseFrame>base_link</robotBaseFrame>
+      <robotBaseFrame>base_footprint</robotBaseFrame>
 
       <publishTf>1</publishTf>
       
@@ -95,6 +95,7 @@
         <depthImageTopicName>depth/image_raw</depthImageTopicName>
         <depthImageCameraInfoTopicName>depth/camera_info</depthImageCameraInfoTopicName>
         <pointCloudTopicName>depth/points</pointCloudTopicName>
+	<updateRate>3.0</updateRate>
         <frameName>Xtion_depth_optical_frame</frameName>
       </plugin>
     </sensor>

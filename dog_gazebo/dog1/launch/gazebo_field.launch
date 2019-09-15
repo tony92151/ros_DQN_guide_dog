@@ -1,6 +1,6 @@
 <launch>
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
-    <arg name="world_name" value="$(find dog1)/world/turtle.world"/>
+    <arg name="world_name" value="$(find dog1)/world/wall2.world"/>
   </include> 
   <node
     name="tf_footprint_base"
