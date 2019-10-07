@@ -79,7 +79,7 @@ class ReinforceAgent():
         # if torch.cuda.is_available():
         #     rospy.loginfo("Use gpu")
 
-        self.batch_size = 16
+        self.batch_size = 64
         self.train_start = 128
         self.memory = deque(maxlen=10000)
 
@@ -166,6 +166,7 @@ class ReinforceAgent():
 
         state_action_values = self.model(trans_state).max(1)[0].detach().unsqueeze(1).type(torch.FloatTensor)
         next_state_values = self.target_model(trans_next_state).max(1)[0].detach()
+        
         expected_state_action_values = (next_state_values * 0.999) + trans_reward
         expected_state_action_values = expected_state_action_values.unsqueeze(1).type(torch.FloatTensor)
 
