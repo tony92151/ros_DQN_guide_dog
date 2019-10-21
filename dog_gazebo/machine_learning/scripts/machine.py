@@ -1,4 +1,4 @@
-#!/home/ros/torch_gpu_ros/bin/python
+#!/home/tedbest/torch_gpu_ros/bin/python
 
 import rospy
 import rospkg
@@ -39,18 +39,24 @@ class DQN(nn.Module):
     def __init__(self,state_size,action_size):
         super(DQN, self).__init__()
         
-        self.ln1 = nn.Linear(in_features = state_size, out_features = 24)
-        #self.ba = nn.BatchNorm1d(24)
-        self.ln2 = nn.Linear(in_features = 24, out_features = 12)
+        self.ln1 = nn.Linear(in_features = state_size, out_features = 64)
+        self.ba = nn.BatchNorm1d(64)
+        self.relu1 = nn.ReLU()
+        self.ln2 = nn.Linear(in_features = 64, out_features = 48)
         self.dr = nn.Dropout(0.5)
-        self.ln3 = nn.Linear(in_features = 12, out_features = action_size)
+        self.ln3 = nn.Linear(in_features = 48, out_features = 12)
+        self.dr2 = nn.Dropout(0.3)
+        self.ln4 = nn.Linear(in_features = 12, out_features = action_size)
             
     def forward(self, s):
         s = self.ln1(s)
         #s = self.ba(s)
+        s = self.relu1(s)
         s = self.ln2(s)
         s = self.dr(s)
         s = self.ln3(s)
+        s = self.dr2(s)
+        s = self.ln4(s)
         s = s.view(s.size(0),-1)
         return s
 
@@ -59,18 +65,16 @@ class DQN(nn.Module):
 class ReinforceAgent():
     def __init__(self, state_size, action_size):
         #self.pub_result = rospy.Publisher('result', Float32MultiArray, queue_size=5)
-        #self.dirPath = os.path.dirname(os.path.realpath(__file__))
-        #self.dirPath = self.dirPath.replace('turtlebot3_dqn/nodes', 'turtlebot3_dqn/save_model/stage_1_')
-        #self.result = Float32MultiArray()
+        self.result = Float32MultiArray()
 
         self.load_model = False
         self.load_episode = 0
         self.state_size = state_size
         self.action_size = action_size
         self.episode_step = 6000
-        self.target_update = 2000
+        self.target_update = 1000
         self.discount_factor = 0.99
-        self.learning_rate = 0.00025
+        self.learning_rate = 0.001
         self.epsilon = 1.0
         self.epsilon_decay = 0.99
         self.epsilon_min = 0.05
@@ -79,13 +83,14 @@ class ReinforceAgent():
         # if torch.cuda.is_available():
         #     rospy.loginfo("Use gpu")
 
-        self.batch_size = 64
-        self.train_start = 128
+        self.batch_size = 128
+        self.train_start = 256
         self.memory = deque(maxlen=10000)
 
         self.model = DQN(self.state_size,self.action_size)
         self.target_model = DQN(self.state_size,self.action_size).eval()
 
+        self.devices = "cpu"
         # if torch.cuda.is_available():
         #     self.model.cuda()
         #     self.target_model.cuda()
@@ -117,11 +122,20 @@ class ReinforceAgent():
             #print(state.shape)
             #print(state)
             return self.model(state).max(1)[1].view(1, 1)
+
+    def getQvalue(self, reward, next_target, done):
+        if done:
+            return reward
+        else:
+            return reward + self.discount_factor * np.amax(next_target)
+
+    def updateTargetModel(self):
+        self.target_model.set_weights(self.model.get_weights())
             
 
-    def appendMemory(self, state, action, reward, next_state):
+    def appendMemory(self, state, action, reward, next_state,done):
         #print(len(self.memory))
-        self.memory.append((state, action, reward, next_state))
+        self.memory.append((state, action, reward, next_state,done))
 
     # def appendMemory(self, state, action, reward, next_state, done):
     #     self.memory.append((state, action, reward, next_state, done))
@@ -129,11 +143,58 @@ class ReinforceAgent():
     def optimize(self,target=False):
         ############################################################
         trans = np.array(self.memory)
+        #print(len(self.memory))
 
-        trans_state = trans[:,0]
-        trans_action = trans[:,1]
-        trans_reward = trans[:,2]
-        trans_next_state = trans[:,3]
+        pick = random.sample(trans, k=self.batch_size)
+
+        #print(pick.shape)
+
+        train_X = np.empty((0, self.state_size), dtype=np.float64)
+        train_Y = np.empty((0, self.action_size), dtype=np.float64)
+
+        for i in range(self.batch_size):
+            
+            #print("in batch: ",i)
+            trans_state = pick[i][0]
+            trans_action = pick[i][1]
+            trans_reward = pick[i][2]
+            trans_next_state = pick[i][3]
+            trans_dones = pick[i][4]
+
+            state = torch.FloatTensor(trans_state.reshape(1, len(trans_state)))
+            with torch.no_grad():
+                q_value = self.model(state)
+            q_value = q_value.cpu().numpy()
+            self.q_value = q_value
+
+
+            next_state = torch.FloatTensor(trans_next_state.reshape(1, len(trans_next_state)))
+            trans_next_state_values = 0
+            with torch.no_grad():
+                if target:
+                    trans_next_state_values = self.target_model(next_state)
+                else:
+                    next_state_values = self.model(next_state)
+            trans_next_state_values = trans_next_state_values
+            trans_next_q_value = self.getQvalue(trans_reward, trans_next_state_values, trans_dones)
+
+            #print("trans_state: ",np.array([trans_state]).shape)
+            train_X = np.append(train_X,np.array([trans_state]),axis = 0)
+
+            q_value[0][trans_action] = trans_next_q_value
+
+            train_Y = np.append(train_Y, np.array([q_value[0]]),axis = 0)
+
+        #print(train_X.shape)
+        #print(train_Y.shape)
+        train_X = torch.FloatTensor(train_X)
+        train_Y = torch.FloatTensor(train_Y)
+
+        output = self.model(train_X)
+        loss = nn.functional.smooth_l1_loss(train_Y, output)
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
         #print(len(trans_next_state))
         #print("*************************************")
         #print(trans_next_state)
@@ -142,51 +203,57 @@ class ReinforceAgent():
         #print("trans_action:",len(trans_action))
         # print("trans_reward:",trans_reward)
         # print("trans_next_state:",trans_next_state)
-        while 1:
-            mLen = len(self.memory)
-            n = np.arange(mLen).tolist()
-            pick = random.sample(n, k=self.batch_size)
 
-            trans_state_ = trans_state[pick].tolist()
-            trans_action_ = trans_action[pick].tolist()
-            trans_reward_ = trans_reward[pick].tolist()
-            trans_next_state_ = trans_next_state[pick].tolist()
-            if (None not in trans_next_state_):
-                break
-            #print("again")
-        #print(None in trans_next_state_)
-        #print(trans_next_state.shape)
-        ############################################################
 
-        trans_state = torch.FloatTensor(trans_state_)
-        trans_action = torch.FloatTensor(trans_action_)
-        trans_reward = torch.FloatTensor(trans_reward_)
-        trans_next_state = torch.FloatTensor(trans_next_state_)
+        # while 1:
+        #     mLen = len(self.memory)
+        #     n = np.arange(mLen).tolist()
+        #     pick = random.sample(n, k=self.batch_size)
+
+        #     trans_state_ = trans_state[pick].tolist()
+        #     trans_action_ = trans_action[pick].tolist()
+        #     trans_reward_ = trans_reward[pick].tolist()
+        #     trans_next_state_ = trans_next_state[pick].tolist()
+        #     if (None not in trans_next_state_):
+        #         break
+        #     #print("again")
+        # #print(None in trans_next_state_)
+        # #print(trans_next_state.shape)
+        # ############################################################
+
+        # trans_state = torch.FloatTensor(trans_state_)
+        # trans_action = torch.FloatTensor(trans_action_)
+        # trans_reward = torch.FloatTensor(trans_reward_)
+        # trans_next_state = torch.FloatTensor(trans_next_state_)
         
 
-        state_action_values = self.model(trans_state).max(1)[0].detach().unsqueeze(1).type(torch.FloatTensor)
-        next_state_values = self.target_model(trans_next_state).max(1)[0].detach()
+        # state_action_values = self.model(trans_state).max(1)[0].detach().unsqueeze(1).type(torch.FloatTensor)
+        # if target:
+        #     next_state_values = self.target_model(trans_next_state).max(1)[0].detach()
+        # else:
+        #     next_state_values = self.model(trans_next_state).max(1)[0].detach()
         
-        expected_state_action_values = (next_state_values * 0.999) + trans_reward
-        expected_state_action_values = expected_state_action_values.unsqueeze(1).type(torch.FloatTensor)
+        # expected_state_action_values = (next_state_values * 0.999) + trans_reward
+        # expected_state_action_values = expected_state_action_values.unsqueeze(1).type(torch.FloatTensor)
 
-        loss = nn.functional.smooth_l1_loss(state_action_values, expected_state_action_values)
+        # loss = nn.functional.smooth_l1_loss(state_action_values, expected_state_action_values)
 
-        loss = Variable(loss, requires_grad = True)
+        # loss = Variable(loss, requires_grad = True)
 
-        self.optimizer.zero_grad()
-        loss.backward()
-        self.optimizer.step()
-        #print("optimize")
+        # self.optimizer.zero_grad()
+        # loss.backward()
+        # self.optimizer.step()
+        # #print("optimize")
 
 
 
 if __name__ == '__main__':
-    rospy.init_node('machine_dqn')
-    ####
-    #rospy.init_node('turtlebot3_dqn_stage_1')
-    #pub_result = rospy.Publisher('result', Float32MultiArray, queue_size=5)
-    #pub_get_action = rospy.Publisher('get_action', Float32MultiArray, queue_size=5)
+    #rospy.init_node('machine_dqn')
+    rospy.init_node('ros_guide')
+
+    pub_result = rospy.Publisher('result', Float32MultiArray, queue_size=5)
+    pub_get_action = rospy.Publisher('get_action', Float32MultiArray, queue_size=5)
+
     result = Float32MultiArray()
     get_action = Float32MultiArray()
 
@@ -196,6 +263,8 @@ if __name__ == '__main__':
     env = Env(action_size)
 
     agent = ReinforceAgent(state_size, action_size)
+
+    scores, episodes = [], []
 
     global_step = 0
     start_time = time.time()
@@ -214,10 +283,10 @@ if __name__ == '__main__':
             #print("state:",len(state))
             #print("next:",next_state)
 
-            if done:
-                next_state = None
+            # if done:
+            #     next_state = None
 
-            agent.appendMemory(state, action, reward, next_state)
+            agent.appendMemory(state, action, reward, next_state,done)
             # agent.appendMemory(state, action, reward, next_state, done)
 
             if len(agent.memory) >= agent.train_start:
@@ -228,16 +297,22 @@ if __name__ == '__main__':
                     agent.optimize(True)
 
 
-            if t >= 50: # second for time out interrupt
+            score += reward
+            state = next_state
+            get_action.data = [action, score, reward]
+            pub_get_action.publish(get_action)
+            
+            if t >= 70: # second for time out interrupt
                 rospy.loginfo("Time out!!")
                 done = True
 
             if done:
-                # result.data = [score, np.max(agent.q_value)]
-                # pub_result.publish(result)
-                # agent.updateTargetModel()
-                # scores.append(score)
-                # episodes.append(e)
+                #result.data = [score, np.max(agent.q_value)]
+                #pub_result.publish(result)
+                #agent.updateTargetModel()
+                scores.append(score)
+                episodes.append(e)
+
                 m, s = divmod(int(time.time() - start_time), 60)
                 h, m = divmod(m, 60)
 
