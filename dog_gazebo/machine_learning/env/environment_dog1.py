@@ -119,11 +119,11 @@ class Env():
 
         distance_rate = 2 ** (current_distance / self.goal_distance)
         reward = ((round(yaw_reward[action] * 5, 2)) * distance_rate)
-	#print("distance_rate: ",distance_rate)
-	#print("yaw: ",round(yaw_reward[action] * 5, 2))
-	Reward = reward
+        #print("distance_rate: ",distance_rate)
+        #print("yaw: ",round(yaw_reward[action] * 5, 2))
+        Reward = reward
 
-        if done:
+        if done and not self.get_goalbox:
             rospy.loginfo("Collision!!")
             Reward = -200
             self.pub_cmd_vel.publish(Twist())
@@ -135,7 +135,7 @@ class Env():
             self.pub_cmd_vel.publish(Twist())
             self.goal_x, self.goal_y = self.target.movingAt(self.goalNum)
             self.goal_distance = self.getGoalDistace()
-            self.get_goalbox = False
+            #self.get_goalbox = False
 
         return Reward
 
@@ -158,7 +158,10 @@ class Env():
         state, done = self.getState(data)
         reward = self.setReward(state, done, action)
 
-        return np.asarray(state), reward, done
+        goal = self.get_goalbox
+        self.get_goalbox = False
+
+        return np.asarray(state), reward, done, goal
 
     def reset(self):
         rospy.wait_for_service('gazebo/reset_world')
@@ -184,3 +187,4 @@ class Env():
         state, done = self.getState(data)
 
         return np.asarray(state)
+

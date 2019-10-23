@@ -1,5 +1,25 @@
 #!/home/tedbest/torch_gpu_ros/bin/python
 
+#################################################################################
+# Copyright 2018 ROBOTIS CO., LTD.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#################################################################################
+
+# Authors: Gilbert #
+
+# edit : Tony guo
+
 import rospy
 import rospkg
 import os
@@ -54,6 +74,7 @@ class DQN(nn.Module):
         s = self.relu1(s)
         s = self.ln2(s)
         s = self.dr(s)
+        #s = self.relu1(s)
         s = self.ln3(s)
         s = self.dr2(s)
         s = self.ln4(s)
@@ -90,7 +111,11 @@ class ReinforceAgent():
         self.model = DQN(self.state_size,self.action_size)
         self.target_model = DQN(self.state_size,self.action_size).eval()
 
+        self.target_model.load_state_dict(self.model.state_dict())
+        self.loss_func = nn.MSELoss()
+
         self.devices = "cpu"
+        self.q_value = 0
         # if torch.cuda.is_available():
         #     self.model.cuda()
         #     self.target_model.cuda()
@@ -102,13 +127,13 @@ class ReinforceAgent():
         self.EPS_DECAY = 200
         self.GAMMA = 0.999
 
-        self.optimizer = optim.RMSprop(self.model.parameters())
+        self.optimizer = optim.RMSprop(self.model.parameters(),lr = 0.00025, momentum=0.9)
     
 
 
     def selectAction(self, state):
-        p = self.EPS_END + (self.EPS_START - self.EPS_END) * math.exp(-1. * self.steps_done / self.EPS_DECAY)
-        if random.random() <= p:
+        #p = self.EPS_END + (self.EPS_START - self.EPS_END) * math.exp(-1. * self.steps_done / self.EPS_DECAY)
+        if random.random() <= self.epsilon:
             k = random.randrange(7)
             #print(k)
             return k
@@ -127,7 +152,7 @@ class ReinforceAgent():
         if done:
             return reward
         else:
-            return reward + self.discount_factor * np.amax(next_target)
+            return reward + self.discount_factor * np.max(next_target)
 
     def updateTargetModel(self):
         self.target_model.set_weights(self.model.get_weights())
@@ -175,7 +200,7 @@ class ReinforceAgent():
                     trans_next_state_values = self.target_model(next_state)
                 else:
                     next_state_values = self.model(next_state)
-            trans_next_state_values = trans_next_state_values
+            trans_next_state_values = np.array(trans_next_state_values)
             trans_next_q_value = self.getQvalue(trans_reward, trans_next_state_values, trans_dones)
 
             #print("trans_state: ",np.array([trans_state]).shape)
@@ -191,7 +216,7 @@ class ReinforceAgent():
         train_Y = torch.FloatTensor(train_Y)
 
         output = self.model(train_X)
-        loss = nn.functional.smooth_l1_loss(train_Y, output)
+        loss = self.loss_func(output,train_Y)
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
@@ -269,24 +294,27 @@ if __name__ == '__main__':
     global_step = 0
     start_time = time.time()
 
+    
+
     for e in range(EPISODES):
         rospy.loginfo('EPISODES : %d',e)
         done = False
         state = env.reset()
         rospy.loginfo("Reset env")
+        time_out_step = 50
         #print(type(state))
         score = 0
         for t in count():
             action = agent.selectAction(state)
 
-            next_state, reward, done = env.step(action)
+            next_state, reward, done, goal = env.step(action)
             #print("state:",len(state))
             #print("next:",next_state)
 
             # if done:
             #     next_state = None
 
-            agent.appendMemory(state, action, reward, next_state,done)
+            agent.appendMemory(state, action, reward, next_state, done)
             # agent.appendMemory(state, action, reward, next_state, done)
 
             if len(agent.memory) >= agent.train_start:
@@ -302,13 +330,13 @@ if __name__ == '__main__':
             get_action.data = [action, score, reward]
             pub_get_action.publish(get_action)
             
-            if t >= 70: # second for time out interrupt
+            if t >= time_out_step: # second for time out interrupt
                 rospy.loginfo("Time out!!")
                 done = True
 
             if done:
-                #result.data = [score, np.max(agent.q_value)]
-                #pub_result.publish(result)
+                result.data = [score, np.max(agent.q_value)]
+                pub_result.publish(result)
                 #agent.updateTargetModel()
                 scores.append(score)
                 episodes.append(e)
@@ -317,11 +345,14 @@ if __name__ == '__main__':
                 h, m = divmod(m, 60)
 
                 rospy.loginfo('Ep: %d score: %.2f memory: %d epsilon: %.2f time: %d:%02d:%02d',
-                              e, reward, len(agent.memory), agent.epsilon, h, m, s)
+                              e, score, len(agent.memory), agent.epsilon, h, m, s)
                 # param_keys = ['epsilon']
                 # param_values = [agent.epsilon]
                 # param_dictionary = dict(zip(param_keys, param_values))
-                break
+                if not goal:
+                    break
+                else:
+                    time_out_step += 50
 
             global_step += 1
             if global_step % agent.target_update == 0:
