@@ -97,8 +97,8 @@ class ReinforceAgent():
         self.discount_factor = 0.99
         self.learning_rate = 0.001
         self.epsilon = 1.0
-        self.epsilon_decay = 0.99
-        self.epsilon_min = 0.05
+        self.epsilon_decay = 0.999
+        self.epsilon_min = 0.07
 
         # self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         # if torch.cuda.is_available():
@@ -127,14 +127,14 @@ class ReinforceAgent():
         self.EPS_DECAY = 200
         self.GAMMA = 0.999
 
-        self.optimizer = optim.RMSprop(self.model.parameters(),lr = 0.00025, momentum=0.9)
+        self.optimizer = optim.RMSprop(self.model.parameters(),lr = 0.00025, eps=0.9, momentum=0.9)
     
 
 
     def selectAction(self, state):
         #p = self.EPS_END + (self.EPS_START - self.EPS_END) * math.exp(-1. * self.steps_done / self.EPS_DECAY)
         if random.random() <= self.epsilon:
-            k = random.randrange(7)
+            k = random.randrange(self.action_size)
             #print(k)
             return k
         else:
@@ -199,16 +199,17 @@ class ReinforceAgent():
                 if target:
                     trans_next_state_values = self.target_model(next_state)
                 else:
-                    next_state_values = self.model(next_state)
+                    trans_next_state_values = self.model(next_state)
             trans_next_state_values = np.array(trans_next_state_values)
             trans_next_q_value = self.getQvalue(trans_reward, trans_next_state_values, trans_dones)
 
             #print("trans_state: ",np.array([trans_state]).shape)
             train_X = np.append(train_X,np.array([trans_state]),axis = 0)
+            q_va = q_value.copy()
 
-            q_value[0][trans_action] = trans_next_q_value
+            q_va[0][trans_action] = trans_next_q_value
 
-            train_Y = np.append(train_Y, np.array([q_value[0]]),axis = 0)
+            train_Y = np.append(train_Y, np.array([q_va[0]]),axis = 0)
 
         #print(train_X.shape)
         #print(train_Y.shape)
@@ -282,8 +283,8 @@ if __name__ == '__main__':
     result = Float32MultiArray()
     get_action = Float32MultiArray()
 
-    state_size = 48+2
-    action_size = 7
+    state_size = 26
+    action_size = 5
 
     env = Env(action_size)
 
